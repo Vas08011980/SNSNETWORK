@@ -1,0 +1,155 @@
+---
+title: "SNSNETWORK"
+author: "Vas and DEON"
+date: '2022-07-19'
+output: html_document
+---
+Packages SETUP
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+#install.packages("bootnet")
+#install.packages("networktools")
+#install.packages("NetworkComparisonTest")
+#install.packages("qgraph")
+#install.packages("psych")
+#install.packages("tidyverse")
+#install.packages("semTools")
+#install.packages("psychotools")
+#install.packages("semPlot")
+#install.packages("haven")
+library(bootnet)
+library(networktools)
+library(NetworkComparisonTest)
+library(qgraph)
+library(psych)
+library(psychotools)
+library(tidyverse)
+library(semTools)
+library(semPlot)
+library(haven)
+```
+Import Data
+```{r error=FALSE, echo=FALSE, warning=FALSE}
+dataset1 <- read_sav("Time Point 1.sav")
+View(dataset1)
+
+describe(dataset1)
+
+
+```
+Name Nodes
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+names1 <- c("Salience", "Tolerance", "Mood Modification", "Relapse", "Withdrawal", "COnflict", "Depression1", "Anxiety_1", "Stress1")
+
+
+```
+Estimate Network
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+
+network1 <- estimateNetwork(dataset1, default="EBICglasso")
+
+```
+Grouping nodes
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+#group DASS and BSMAS nodes
+groups1=list("SMA"=c(1:6), "Distress"=c(7:9))
+
+```
+
+Estimate Network Stability by bootstrapping network
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+#Default Bootstrapping
+b1 <- bootnet(network1, boots=1000, statistics=c("strength", "expectedInfluence", "edge"))
+#Case Dropping Bootstrapping
+b2 <- bootnet(network1, boots=1000, type="case", statistics=c("strength", "expectedInfluence", "edge"))
+
+
+```
+
+Get centrality stability coefficient
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+corStability(b2)
+```
+Stability of the Network Plotting
+```{r}
+
+pdf("CentrStability1.pdf")
+plot(b2)
+dev.off()
+
+
+```
+
+Strength Centrality Diff Test, saved as pdf
+```{r}
+pdf("CentralityDifference1.pdf")
+plot(b1, "strength", order="sample", labels=TRUE)
+dev.off()
+```
+
+
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+pdf("EdgeStability1.pdf")
+plot(b1, labels = FALSE, order = "sample")
+dev.off()
+```
+Edge weights stability test saved as pdf
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+
+pdf("EdgeDifftest1.pdf")
+plot(b1, "edge", plot="difference", onlyNonZero=TRUE, order = "sample")
+dev.off()
+
+
+```
+
+Plotting 
+
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+pdf("plot1.pdf")
+plot1 <- plot(network1, layout="spring", vsize=6, border.color="black", groups=groups1, color=c('lightblue', 'orange'))
+dev.off()
+
+```
+
+
+create centrality plot and save as pdf
+
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+pdf("CentralityPlot1.pdf", width=5)
+c1 <- centralityPlot(plot1)
+dev.off()
+```
+
+Inspect Centrality Indices
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+Centrality1 <- centralityTable(network1)
+write.csv(Centrality1, "Centrality1.csv")
+view(Centrality1)
+
+```
+get the edges strength/ correlations
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+
+edges1<-getWmat(network1)
+write.csv(edges1, "edges1.csv")
+
+```
+
+Estimate the Bridge Values
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+
+bridge1<-bridge(plot1, communities=c('1', '1', '1', '1', '1', '1', '2', '2', '2'), useCommunities = "all", directed = NULL, nodes = NULL)
+view(Bridges)
+
+```
+
+Plotting Bridges Strength
+```{r}
+pdf("bridgecentrality1.pdf", width = 5)
+plot(bridge1, include = "Bridge Strength")
+dev.off()
+
+
+```
+
+
